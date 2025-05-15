@@ -122,6 +122,13 @@ def displayAllUsers(users):
         print("No Users Found!")
 
 def addNewUser(name,age):
+    """
+    Adds a new user to the database with the specified name and age.
+    
+    Args:
+        name: The name of the user to add.
+        age: The age of the user to add.
+    """
     user=User(name=name, age=age)
     newUser=session.add(user)
 
