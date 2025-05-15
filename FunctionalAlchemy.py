@@ -1,4 +1,94 @@
+# Step 2: Create an SQLite Database with SQLAlchemy
 
+from sqlalchemy  import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# Step 2.1: Create the SQLite database and engine
+engine=create_engine('sqlite:///test.db',echo=True)
+
+# Step 2.2: Define the Base class
+Base=declarative_base()
+
+
+# Step 2.3: Define a Table (Mapped Class)
+
+class User(Base):
+    __tablename__='users'
+    id=Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    name=Column(String, nullable=False)
+    age=Column(Integer, nullable=False)
+
+# Step 2.4: Create the table in the database
+Base.metadata.create_all(engine)
+
+# Step 3: Create a Session
+# Step 3.1: Create a session factory
+Session=sessionmaker(bind=engine)
+
+# Step 3.2: Create a session
+session=Session()
+
+# Step 4: Insert Data
+# Step 4.1: Create a new user instance
+user1=User(name='John Doe', age=30)
+user2=User(name='Jane Smith', age=25)
+
+
+# Step 4.2: Add the user to the session
+session.add(user1)
+session.add(user2)
+
+# Step 4.3: Commit the transaction
+session.commit()
+
+# Step 5: Query Data
+# Retrieve data from the table using SQLAlchemy's query system.
+
+#step 5.1: Query all users
+users=session.query(User).all()
+
+#Print the results
+for user in users:
+    print(f'Id: {user.id}, Name: {user.name}, Age: {user.age}')
+
+#Step 5.2: Query a specific user
+user=session.query(User).filter_by(name='John Doe').first()
+if user:
+    print(f'Found user: Id: {user.id}, Name: {user.name}, Age: {user.age}')
+else:
+    print('User not found of name "John Doe"')    
+
+#step 5.3: Query users with id:
+user = session.query(User).filter_by(id=2).first()
+if user:
+    print(f"found user: Id: {user.id}, Name: {user.name}, Age: {user.age}")
+else:
+    print('User not found with id 2')
+
+# Using filter() to query users with age >= 25, 
+# filter_by() is used to filter by a specific column by keyword arguments
+users = session.query(User).filter(User.age >= 25).all()
+if users:
+    for user in users:
+        print(f"found user: Id: {user.id}, Name: {user.name}, Age: {user.age}")
+else:
+    print('User not found with age >= 25')
+
+#step 6: Update Data
+# Step 6.1: Update a user's age
+user = session.query(User).filter_by(name='John Doe').first()
+if user: 
+    user.age=29
+    session.commit()
+    print(f'Updated user: Id: {user.id}, Name: {user.name}, Age: {user.age}')
+else:
+    print('User not found of name "John Doe"')          
+
+# Step 7: Delete Data
+# Step 7.1: Delete a user by id
+user=session.query(User).filter_by(id=3).first()
+if user: 
+    session.delete(user)
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -34,121 +124,23 @@ def displayAllUsers(users):
 def addNewUser(name,age):
     user=User(name=name, age=age)
     newUser=session.add(user)
+
     session.commit()
-    if user.id:
-        return f'User added Successfully with id {user.id}'
-    else:
-        return "Failed to added User"
-
-def findById(id):
-    return session.query(User).filter_by(id=id).first()
-
-def findAllByName(name):
-    return session.query(User).filter_by(name=name).all()
-
-
-def findFirstByName(name):
-    return session.query(User).filter_by(name=name).first()
-
-def findAllByAge(age):
-    return session.query(User).filter_by(age=age).all()
-
-def updateNameById(id, name):
-    user = findById(id)
-    if user:
-        user.name=name
-        session.commit()
-        return user
-    else: 
-        return 'User is not found'
-
-def UpdateAllNameByName(name, newName):
-    users = findAllByName(name)
-    if users:
-        for user in users:
-            user.name=newName
-        session.commit()
-        return users
-    else:
-        return "Users are not found!"
-
-def updateNameById(id, name):
-    user = findById(id)
-    if user:
-        user.name=name
-        session.commit()
-        return user
-    else:
-        return "User is not found!"
-
-def updateAgeById(id,newAge):
-    user = findById(id)
-    if user: 
-        user.age=newAge
-        session.commit()
-        return user
-    else:
-        return "User not found!"
-
-
-def delById(id):
-    user = findById(id)
-    if user: 
+    print(f'Deleted user: Id: {user.id}, Name: {user.name}, Age: {user.age}')
+else:
+    print('User not found with id 3')
+# Step 7.2: Delete all users
+users=session.query(User).all()
+if users:
+    for user in users:
         session.delete(user)
-        session.commit()
-        return "User deleted Successfully. "
-    else:
-        return "User not found!"
-
-def delFirstByName(name):
-    user = findFirstByName(name)
-    if user: 
-        session.delete(user)
-        session.commit()
-        return "User deleted Successfully. "
-    else:
-        return "User not found!"
+    session.commit()
+    print('Deleted all users')
+else:
+    print('No users to delete')
 
 
-def delAllByName(name):
-    users=findAllByName(name)
-    if users:
-        for user in users:
-            session.delete(user)
-        session.commit()
-        return f"Deleted Users with Name: {name}"
-    else:
-        return "User not found!"
-
-    
-def delAll():
-    users=getAllUsers()
-    if users:
-        for user in users:
-            session.delete(user)
-        session.commit()
-        return f"Deleted All Users"
-    else:
-        return "Database is empty!"
-
-
-    
-if __name__=="__main__":
-    # Example usage
-    print("+==>",getAllUsers())
-    print("+==>",addNewUser("John", 30))
-    print("+==>",addNewUser("Jane", 25))
-    print("+==>",displayAllUsers())
-    print("+==>",findById(1))
-    print("+==>",findAllByName("John"))
-    print("+==>",findFirstByName("Jane"))
-    print("+==>",findAllByAge(30))
-    print("+==>",updateNameById(1, "Johnny"))
-    print("+==>",UpdateAllNameByName("Jane", "Janet"))
-    print("+==>",updateAgeById(2, 26))
-    print("+==>",delById(1))
-    print("+==>",delFirstByName("Janet"))
-    print("+==>",delAllByName("Jane"))
-    print("+==>",delAll())
-
-
+# Step 8: Close the session
+session.close()
+# Step 9: Close the engine
+engine.dispose()
